@@ -172,7 +172,7 @@
         });
         if (!response.ok) throw new Error(await errorText(response));
         const info = await response.json();
-        currentTitle = (info.title || 'video-download').trim();
+        currentTitle = (info.filename_title || info.title || 'video-download').trim();
         results.replaceChildren();
         const thumb = el('div', 'th');
         if (info.thumbnail && /^https:\/\//i.test(info.thumbnail)) {
