@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // — is left alone too; the attribute is then the author's to drop.)
     template = template.replace(/<[a-z][^>]*>/gi, (tag) => /\s(?:src|href|srcset|poster|data|xlink:href)="blob:/i.test(tag) ? tag.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '') : tag);
 
-    template = template.replace('</body>', '<script src="app.js"><\\/script></body>');
+    template = template.replace('</body>', '<script src="app.js"><\/script></body>');
 
     const resourceScript = '<script>window.__resources = ' +
       JSON.stringify(resourceMap).replace(/<\//g, '<\\/') +
