@@ -137,9 +137,9 @@
           .replace(/[. ]+$/g, '')
           .trim()
           .slice(0, 180) || (downloadMode === 'audio' ? 'audio-download' : downloadMode === 'image' ? 'image-download' : 'video-download');
-        if (!filename || /^(video-download|audio-download|image-download)(\\.[a-z0-9]{2,5})?$/i.test(filename)) {
+        if (!filename || ['video-download', 'audio-download', 'image-download'].includes(filename)) {
           filename = safeTitle + fallbackExt;
-        } else if (!/\\.[a-z0-9]{2,5}$/i.test(filename) && fallbackExt) {
+        } else if (fallbackExt && !filename.includes('.')) {
           filename += fallbackExt;
         }
         const objectUrl = URL.createObjectURL(blob);
