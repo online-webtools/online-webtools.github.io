@@ -25,9 +25,9 @@
       responsive.id = 'downloader-responsive-styles';
       responsive.textContent = `
         *, *::before, *::after { box-sizing: border-box; }
-        html, body { max-width: 100%; overflow-x: hidden; }
-        .pg { width: 100%; min-height: 100vh; overflow-x: clip; }
-        .pg main, .pg section, .pg .hero, .pg .wrap { max-width: 100%; }
+        html, body { width: 100%; max-width: 100%; margin: 0; overflow-x: hidden; }
+        .pg { display: block; width: 100%; max-width: 100vw; min-height: 100vh; overflow-x: clip; }
+        .pg main, .pg section, .pg .hero, .pg .wrap, .pg .sec, .pg .box { width: 100%; max-width: 100%; min-width: 0; }
         .fld, .urlbar, .input-wrap { min-width: 0; }
         .fld input, #url { width: 100%; min-width: 0; }
         .go, .paste { flex-shrink: 0; }
@@ -40,10 +40,10 @@
           .pg { padding-inline: 16px !important; }
           .hero { padding-inline: 0 !important; }
           h1 { font-size: clamp(30px, 8vw, 40px) !important; line-height: 1.12 !important; overflow-wrap: anywhere; }
-          .fld { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px !important; }
+          .box { display: flex !important; flex-direction: column !important; align-items: stretch !important; width: 100% !important; gap: 8px !important; padding: 10px !important; }
+          .fld { display: flex; width: 100%; flex: 1 1 auto; gap: 8px; padding: 0 8px !important; }
           .fld input, #url { flex: 1 1 100%; width: 100%; font-size: 16px !important; }
-          .paste { flex: 1 1 30%; min-height: 44px; }
-          .go { flex: 1 1 60%; min-height: 48px !important; padding-inline: 16px !important; font-size: 16px !important; }
+          .paste, .go { width: 100%; min-height: 48px !important; justify-content: center; padding-inline: 16px !important; font-size: 16px !important; }
           .chips { gap: 8px !important; }
           .chips .chip { padding: 10px 14px !important; font-size: 14px !important; }
           .res { width: 100%; padding: 14px !important; gap: 14px !important; }
@@ -137,7 +137,7 @@
           .replace(/[. ]+$/g, '')
           .trim()
           .slice(0, 180) || (downloadMode === 'audio' ? 'audio-download' : downloadMode === 'image' ? 'image-download' : 'video-download');
-        if (!filename || ['video-download', 'audio-download', 'image-download'].includes(filename)) {
+        if (!filename || /^(video-download|audio-download|image-download)(\\.[a-z0-9]+)?$/i.test(filename)) {
           filename = safeTitle + fallbackExt;
         } else if (fallbackExt && !filename.includes('.')) {
           filename += fallbackExt;
