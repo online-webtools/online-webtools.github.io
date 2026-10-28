@@ -75,7 +75,7 @@ def video_info(body: URLRequest):
         "noplaylist": True,
         "socket_timeout": 15,
         # Try alternate clients when YouTube blocks its default web client.
-        "extractor_args": {"youtube": {"player_client": ["android", "web_safari"]}},
+        "extractor_args": {"youtube": {"player_client": ["tv", "web_safari"]}},
     }
     cookie_path = None
     try:
@@ -129,7 +129,7 @@ def download_video(
         "max_filesize": 500 * 1024 * 1024,
         "socket_timeout": 20,
         "retries": 2,
-        "extractor_args": {"youtube": {"player_client": ["android", "web_safari"]}},
+        "extractor_args": {"youtube": {"player_client": ["tv", "web_safari"]}},
     }
     if mode == "video":
         opts["format"] = format_id if format_id != "best" else "best[ext=mp4]/best"
