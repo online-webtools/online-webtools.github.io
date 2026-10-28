@@ -133,7 +133,7 @@
         else if (plain) filename = plain[1];
         const fallbackExt = downloadMode === 'audio' ? '.mp3' : downloadMode === 'image' ? '' : '.mp4';
         const safeTitle = (currentTitle || 'video-download')
-          .replace(/[\\\\/:*?\"<>|\\u0000-\\u001F]/g, '')
+          .replace(/[\\/:*?\"<>|]/g, '')
           .replace(/[. ]+$/g, '')
           .trim()
           .slice(0, 180) || (downloadMode === 'audio' ? 'audio-download' : downloadMode === 'image' ? 'image-download' : 'video-download');
