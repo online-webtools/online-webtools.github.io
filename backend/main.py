@@ -50,7 +50,15 @@ def health():
 @app.post("/api/info")
 def video_info(body: URLRequest):
     url = validate_public_url(str(body.url))
-    opts = {"quiet": True, "no_warnings": True, "skip_download": True, "noplaylist": True, "socket_timeout": 15}
+    opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "noplaylist": True,
+        "socket_timeout": 15,
+        # Try alternate clients when YouTube blocks its default web client.
+        "extractor_args": {"youtube": {"player_client": ["android", "web_safari"]}},
+    }
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
