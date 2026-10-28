@@ -7,6 +7,12 @@
     const note = document.querySelector('.note');
     const results = document.querySelector('.res');
     const chips = document.querySelector('.chips');
+    if (!document.getElementById('media-mode-chip-styles')) {
+      const style = document.createElement('style');
+      style.id = 'media-mode-chip-styles';
+      style.textContent = '.chips .chip{cursor:pointer;transition:background .15s,color .15s,border-color .15s}.chips .chip.active{background:#42dc83!important;color:#07120b!important;border-color:#42dc83!important}.chips .chip:focus-visible{outline:2px solid #42dc83;outline-offset:3px}.chips button.chip{font:inherit}';
+      document.head.appendChild(style);
+    }
     if (!input || !mainButton || !results || mainButton.dataset.apiBound) return;
     mainButton.dataset.apiBound = '1';
 
