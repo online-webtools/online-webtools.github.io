@@ -124,6 +124,9 @@ def download_video(body: URLRequest, format_id: str = "best"):
         "max_filesize": 500 * 1024 * 1024,
         "socket_timeout": 20,
         "retries": 2,
+        # Use the same alternate YouTube clients as /api/info; other
+        # supported platforms continue to use yt-dlp's automatic extractors.
+        "extractor_args": {"youtube": {"player_client": ["android", "web_safari"]}},
     }
     cookie_path = None
     try:
