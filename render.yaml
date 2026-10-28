@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: online-webtools-video-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: FRONTEND_ORIGIN
+        value: https://online-webtools.github.io
