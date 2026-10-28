@@ -26,6 +26,24 @@ app.add_middleware(
 class URLRequest(BaseModel):
     url: HttpUrl
 
+def youtube_cookie_options():
+    """Read an optional Netscape-format cookie file from the YOUTUBE_COOKIES secret."""
+    cookie_text = os.getenv("YOUTUBE_COOKIES", "").strip()
+    if not cookie_text:
+        return {}, None
+    handle = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".txt", prefix="yt-cookies-", delete=False)
+    try:
+        handle.write(cookie_text)
+        handle.close()
+        os.chmod(handle.name, 0o600)
+        return {"cookiefile": handle.name}, handle.name
+    except Exception:
+        try:
+            os.unlink(handle.name)
+        except OSError:
+            pass
+        raise
+
 def validate_public_url(value: str) -> str:
     parsed = urlparse(value)
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
@@ -59,7 +77,10 @@ def video_info(body: URLRequest):
         # Try alternate clients when YouTube blocks its default web client.
         "extractor_args": {"youtube": {"player_client": ["android", "web_safari"]}},
     }
+    cookie_path = None
     try:
+        cookie_opts, cookie_path = youtube_cookie_options()
+        opts.update(cookie_opts)
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
         formats = []
@@ -81,6 +102,12 @@ def video_info(body: URLRequest):
         }
     except Exception as exc:
         raise HTTPException(status_code=422, detail=f"Could not read this video: {str(exc)[:240]}")
+    finally:
+        if cookie_path:
+            try:
+                os.unlink(cookie_path)
+            except OSError:
+                pass
 
 @app.post("/api/download")
 def download_video(body: URLRequest, format_id: str = "best"):
@@ -98,7 +125,10 @@ def download_video(body: URLRequest, format_id: str = "best"):
         "socket_timeout": 20,
         "retries": 2,
     }
+    cookie_path = None
     try:
+        cookie_opts, cookie_path = youtube_cookie_options()
+        opts.update(cookie_opts)
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
         outputs = [p for p in Path(temp_dir).iterdir() if p.is_file()]
@@ -115,3 +145,9 @@ def download_video(body: URLRequest, format_id: str = "best"):
         import shutil
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise HTTPException(status_code=422, detail=f"Download failed: {str(exc)[:240]}")
+    finally:
+        if cookie_path:
+            try:
+                os.unlink(cookie_path)
+            except OSError:
+                pass
