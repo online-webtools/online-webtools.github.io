@@ -18,6 +18,40 @@
 
     let mode = 'video';
     let preferredHeight = 0;
+    let currentTitle = 'video-download';
+
+    if (!document.getElementById('downloader-responsive-styles')) {
+      const responsive = document.createElement('style');
+      responsive.id = 'downloader-responsive-styles';
+      responsive.textContent = `
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { max-width: 100%; overflow-x: hidden; }
+        .pg { width: 100%; min-height: 100vh; overflow-x: clip; }
+        .pg main, .pg section, .pg .hero, .pg .wrap { max-width: 100%; }
+        .fld, .urlbar, .input-wrap { min-width: 0; }
+        .fld input, #url { width: 100%; min-width: 0; }
+        .go, .paste { flex-shrink: 0; }
+        .res { width: min(760px, calc(100% - 32px)); min-width: 0; }
+        .rl, .row, .rt { min-width: 0; overflow-wrap: anywhere; }
+        .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .row button { flex-shrink: 0; }
+        .chips { padding-inline: 12px; }
+        @media (max-width: 600px) {
+          .pg { padding-inline: 16px !important; }
+          .hero { padding-inline: 0 !important; }
+          h1 { font-size: clamp(30px, 8vw, 40px) !important; line-height: 1.12 !important; overflow-wrap: anywhere; }
+          .fld { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px !important; }
+          .fld input, #url { flex: 1 1 100%; width: 100%; font-size: 16px !important; }
+          .paste { flex: 1 1 30%; min-height: 44px; }
+          .go { flex: 1 1 60%; min-height: 48px !important; padding-inline: 16px !important; font-size: 16px !important; }
+          .chips { gap: 8px !important; }
+          .chips .chip { padding: 10px 14px !important; font-size: 14px !important; }
+          .res { width: 100%; padding: 14px !important; gap: 14px !important; }
+          .row button { max-width: 100%; }
+        }
+      `;
+      document.head.appendChild(responsive);
+    }
 
     const status = (message, error = false) => {
       if (!note) return;
@@ -97,9 +131,16 @@
         const plain = disposition.match(/filename="?([^";]+)"?/i);
         if (utf8) { try { filename = decodeURIComponent(utf8[1]); } catch (_) { filename = utf8[1]; } }
         else if (plain) filename = plain[1];
-        if (!filename || filename === 'video-download') {
-          const ext = downloadMode === 'audio' ? '.mp3' : downloadMode === 'image' ? '' : '.mp4';
-          filename = (downloadMode === 'audio' ? 'audio-download' : downloadMode === 'image' ? 'image-download' : 'video-download') + ext;
+        const fallbackExt = downloadMode === 'audio' ? '.mp3' : downloadMode === 'image' ? '' : '.mp4';
+        const safeTitle = (currentTitle || 'video-download')
+          .replace(/[\\\\/:*?\"<>|\\u0000-\\u001F]/g, '')
+          .replace(/[. ]+$/g, '')
+          .trim()
+          .slice(0, 180) || (downloadMode === 'audio' ? 'audio-download' : downloadMode === 'image' ? 'image-download' : 'video-download');
+        if (!filename || /^(video-download|audio-download|image-download)(\\.[a-z0-9]{2,5})?$/i.test(filename)) {
+          filename = safeTitle + fallbackExt;
+        } else if (!/\\.[a-z0-9]{2,5}$/i.test(filename) && fallbackExt) {
+          filename += fallbackExt;
         }
         const objectUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -131,6 +172,7 @@
         });
         if (!response.ok) throw new Error(await errorText(response));
         const info = await response.json();
+        currentTitle = (info.title || 'video-download').trim();
         results.replaceChildren();
         const thumb = el('div', 'th');
         if (info.thumbnail && /^https:\/\//i.test(info.thumbnail)) {
