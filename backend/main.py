@@ -110,37 +110,63 @@ def video_info(body: URLRequest):
                 pass
 
 @app.post("/api/download")
-def download_video(body: URLRequest, format_id: str = "best"):
+def download_video(
+    body: URLRequest,
+    format_id: str = "best",
+    mode: str = "video",
+):
     url = validate_public_url(str(body.url))
+    if mode not in {"video", "audio", "image"}:
+        raise HTTPException(status_code=400, detail="mode must be video, audio, or image")
+
     temp_dir = tempfile.mkdtemp(prefix="video-dl-")
     output_template = str(Path(temp_dir) / "%(title).100s.%(ext)s")
     opts = {
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
-        "format": format_id if format_id != "best" else "best[ext=mp4]/best",
         "outtmpl": output_template,
-        "merge_output_format": "mp4",
         "max_filesize": 500 * 1024 * 1024,
         "socket_timeout": 20,
         "retries": 2,
-        # Use the same alternate YouTube clients as /api/info; other
-        # supported platforms continue to use yt-dlp's automatic extractors.
         "extractor_args": {"youtube": {"player_client": ["android", "web_safari"]}},
     }
+    if mode == "video":
+        opts["format"] = format_id if format_id != "best" else "best[ext=mp4]/best"
+        opts["merge_output_format"] = "mp4"
+    elif mode == "audio":
+        opts["format"] = "bestaudio/best"
+        opts["postprocessors"] = [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }]
+    else:
+        # Let yt-dlp's extractor choose the native media for photo posts.
+        # Some sources only expose a cover/thumbnail rather than the original image.
+        opts["format"] = "best"
+
     cookie_path = None
     try:
         cookie_opts, cookie_path = youtube_cookie_options()
         opts.update(cookie_opts)
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
-        outputs = [p for p in Path(temp_dir).iterdir() if p.is_file()]
+        outputs = [p for p in Path(temp_dir).iterdir() if p.is_file() and p.stat().st_size > 0]
         if not outputs:
             raise RuntimeError("The platform did not produce a downloadable file.")
-        path = outputs[0]
+        preferred_exts = {"video": {".mp4", ".webm", ".mkv", ".mov"}, "audio": {".mp3"}, "image": {".jpg", ".jpeg", ".png", ".webp", ".avif"}}
+        matching = [p for p in outputs if p.suffix.lower() in preferred_exts[mode]]
+        path = matching[0] if matching else outputs[0]
+        media_types = {
+            ".mp4": "video/mp4", ".webm": "video/webm", ".mkv": "video/x-matroska",
+            ".mov": "video/quicktime", ".mp3": "audio/mpeg", ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp",
+            ".avif": "image/avif",
+        }
         return FileResponse(
             path,
-            media_type="application/octet-stream",
+            media_type=media_types.get(path.suffix.lower(), "application/octet-stream"),
             filename=path.name,
             background=None,
         )
