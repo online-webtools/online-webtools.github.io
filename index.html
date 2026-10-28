@@ -393,10 +393,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // written with: that fetch is exactly what SRI protects. (A crossorigin
     // on a parent whose child carries the blob — <video crossorigin><source>
     // — is left alone too; the attribute is then the author's to drop.)
-    </scrxipt>`;
-    apiIntegration = apiIntegration.replace('</scrxipt>', '</' + 'script>');
-    template = template.replace('</body>', apiIntegration + '</body>');
-
+    template = template.replace(/<[a-z][^>]*>/gi, (tag) => /\s(?:src|href|srcset|poster|data|xlink:href)="blob:/i.test(tag) ? tag.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '') : tag);
     const resourceScript = '<script>window.__resources = ' +
       JSON.stringify(resourceMap).replace(/<\//g, '<\\/') +
       ';</' + 'script>';
@@ -585,7 +582,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (note) note.textContent = originalNote;
       });
     })();
-    <\/script>`;
     </scrxipt>`;
     apiIntegration = apiIntegration.replace('</scrxipt>', '</' + 'script>');
     template = template.replace('</body>', apiIntegration + '</body>');
