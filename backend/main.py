@@ -93,8 +93,15 @@ def video_info(body: URLRequest):
                     "filesize": item.get("filesize") or item.get("filesize_approx"),
                     "has_audio": item.get("acodec") != "none",
                 })
+        title = info.get("title") or "video-download"
+        filename_title = title
+        description = (info.get("description") or "").strip()
+        extractor_name = (info.get("extractor_key") or "").lower()
+        if "instagram" in extractor_name and description and title.lower().startswith(("video by ", "photo by ", "reel by ")):
+            filename_title = description
         return {
-            "title": info.get("title"),
+            "title": title,
+            "filename_title": filename_title,
             "thumbnail": info.get("thumbnail"),
             "duration": info.get("duration"),
             "extractor": info.get("extractor_key"),
