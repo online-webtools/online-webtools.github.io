@@ -586,7 +586,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     })();
     <\/script>`;
-    template = template.replace(/<\\/body>/i, apiIntegration + '</body>');
+    </scrxipt>`;
+    apiIntegration = apiIntegration.replace('</scrxipt>', '</' + 'script>');
+    template = template.replace('</body>', apiIntegration + '</body>');
 
     const doc = new DOMParser().parseFromString(template, 'text/html');
     document.documentElement.replaceWith(doc.documentElement);
